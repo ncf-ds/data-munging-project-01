@@ -1,0 +1,53 @@
+---
+title: "CollegeScorecard"
+output: html_document
+---
+
+```{r}
+require("doBy")
+setwd("/Users/erinc/Desktop/DataMunging/Projects/CollegeScorecard/data/merged/")
+```
+
+
+```{r, cache=TRUE}
+files <- list.files(pattern="*.csv")
+college.df <- data.frame()
+for(file in files) college.df <- rbind(college.df, read.csv(file, header = TRUE, na.strings = c("NULL")))
+```
+
+What is the ratio of NAs to non-NAs overall? (Note that NA includes both "Null" and "PrivacySuppressed".)
+```{r}
+sum(is.na(college.df))/sum(!is.na(college.df))
+```
+
+Yes, that's greater than 1 - there are more NAs than non NAs in this dataset. Which column has the most NAs, and how many are there?
+
+```{r}
+col.na.ratios <- colSums(is.na(college.df))/colSums(!is.na(college.df))
+col.max.na <- c(max(col.na.ratios), nrow(college.df), which.max(col.na.ratios))
+names(col.max.na) <- c("number of NAs", "number of rows", "column name")
+
+col.max.na
+```
+
+And the fewest NAs?
+
+```{r}
+col.na.ratios <- colSums(is.na(college.df))/colSums(!is.na(college.df))
+col.min.na <- c(min(col.na.ratios), nrow(college.df), which.min(col.na.ratios))
+names(col.min.na) <- c("number of NAs", "number of rows", "column name")
+
+col.min.na
+```
+
+
+```{r}
+head(
+  summaryBy(
+    FEMALE_COMP_ORIG_YR4_RT + FEMALE_COMP_ORIG_YR3_RT + FEMALE_COMP_ORIG_YR2_RT + FEMALE_COMP_ORIG_YR6_RT + FEMALE_COMP_ORIG_YR8_RT ~ region + PREDDEG, 
+    data=college.df,
+    FUN=function(x) {c(m =mean(x, na.rm = TRUE),s =sd(x, na.rm = TRUE)) }
+    )
+)
+```
+
