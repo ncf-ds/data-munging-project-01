@@ -5,7 +5,7 @@ output: html_document
 
 ```{r}
 require("doBy")
-setwd("/Users/erinc/Desktop/DataMunging/Projects/CollegeScorecard/data/merged/")
+setwd("/data/merged/")
 ```
 
 
