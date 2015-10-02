@@ -28,7 +28,7 @@ data.frame <- list(data1996,data1997,data1998,data1999,data2000,data2001,data200
 
   allyears <- data.frame()
   for (i in data.frame){
-    rbind(allyears, cbind(i, as.character(i)))
+    rbind(allyears, cbind(i, as.character(i)[4:8]))
   }
   str(allyears)
 ```
