@@ -1,0 +1,288 @@
+---
+title: "Data Munging"
+output: html_document
+---
+
+
+```{r}
+setwd("~/Desktop/CollegeScorecard_Raw_Data")
+data1996 <- read.csv((file.path="MERGED1996_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data1997 <- read.csv((file.path="MERGED1997_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data1998 <- read.csv((file.path="MERGED1998_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data1999 <- read.csv((file.path="MERGED1999_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2000 <- read.csv((file.path="MERGED2000_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2001 <- read.csv((file.path="MERGED2001_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2002 <- read.csv((file.path="MERGED2002_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2003 <- read.csv((file.path="MERGED2003_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2004 <- read.csv((file.path="MERGED2004_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2005 <- read.csv((file.path="MERGED2005_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2006 <- read.csv((file.path="MERGED2006_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2007 <- read.csv((file.path="MERGED2007_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2008 <- read.csv((file.path="MERGED2008_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2009 <- read.csv((file.path="MERGED2009_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2010 <- read.csv((file.path="MERGED2010_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2011 <- read.csv((file.path="MERGED2011_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2012 <- read.csv((file.path="MERGED2012_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2013 <- read.csv((file.path="MERGED2013_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data.frame <- list(data1996,data1997,data1998,data1999,data2000,data2001,data2002,data2003,data2004,data2005,data2006,data2007,data2008,data2009,data2010,data2011,data2012,data2013)
+
+  allyears <- data.frame()
+  for (i in data.frame){
+    rbind(allyears, cbind(i, as.character(i)))
+  }
+  str(allyears)
+```
+
+UNITID and OPEID is unique across years.
+```{r}
+data1996[1:5,1:5]
+data2001[1:5,1:5]
+data2010[1:5,1:5]
+data2013[1:5,1:5]
+
+```
+
+Summing of na's
+```{r}
+sum(is.na(data1996[,100]))
+
+cal_na_vals <- function(col) {
+  na_vec <- is.na(col)
+  num_NA <- sum(na_vec)
+  return(num_NA)
+}
+
+NAs_by_cols <- apply(data1996, 2, cal_na_vals)
+NAs_by_cols[1:10]
+str(data1996)
+NAs_by_cols <- apply(data2013, 2, cal_na_vals)
+str(NAs_by_cols)
+str(data2013)
+
+hist(NAs_by_cols)
+par(mfrow=c(4,4))
+totalNAs=list()
+for (i in 1:length(data.frame)) {
+  NAs_by_cols <- apply(data.frame[[i]], 2, cal_na_vals)
+  hist(NAs_by_cols)
+  totalNAs <- append(totalNAs,NAs_by_cols)
+}
+
+totalNAs
+
+```
+The histograms indicate that the proportion of missing data for each column decreases overtime. From this we interpret that these new columns were added over time. Then these columns were retroactively added to previous years datasets to keep the number of columns consistent.
+
+Do this for the dataset
+```{r}
+na.prop <- apply(data.frame, 2, function(x) sum(is.na(x)/length(x)) )
+```
+
+Counting number of columns in a specific class
+
+
+```{r}
+# of columns of type numeric
+Nnum=c()
+fnum=c()
+is.numeric(data1996[1:length(data1996)])
+for (i in (1:length(data2013))) {
+  Nnum <- c(Nnum, is.numeric(data2013[,i]))
+  fnum <- c(fnum, is.factor(data2013[,i]))
+
+}
+sumNnum <- sum(Nnum)
+cat("The number of columns of type numeric is",sumNnum)
+
+sumfnum <- sum(fnum)
+cat("The number of columns of type numeric is",sumfnum)
+
+
+
+```
+
+Ints that should stay Ints
+   [2] " $ UNITID                          : int  100654 100663 100690 100706 100724 100751 100760 100812 100830 100858 ..."                                                         
+   [3] " $ OPEID                           : int  100200 105200 2503400 105500 100500 105100 100700 100800 831000 100900 ..."                                                        
+   [4] " $ opeid6 
+
+  [40] " $ SATVR25                         : int  370 520 NA 510 380 490 NA NA NA 520 ..."                                                                                           
+  [41] " $ SATVR75                         : int  450 640 NA 640 480 620 NA NA NA 620 ..."                                                                                           
+  [42] " $ SATMT25                         : int  350 520 NA 510 370 500 NA NA NA 540 ..."                                                                                           
+  [43] " $ SATMT75                         : int  450 650 NA 650 480 640 NA NA NA 650 ..."                                                                                           
+  [44] " $ SATWR25                         : int  NA NA NA NA NA 480 NA NA NA 510 ..."                                                                                               
+  [45] " $ SATWR75                         : int  NA NA NA NA NA 600 NA NA NA 620 ..."                                                                                               
+  [46] " $ SATVRMID                        : int  410 580 NA 575 430 555 NA NA NA 570 ..."                                                                                           
+  [47] " $ SATMTMID                        : int  400 585 NA 580 425 570 NA NA NA 595 ..."                                                                                           
+  [48] " $ SATWRMID                        : int  NA NA NA NA NA 540 NA NA NA 565 ..."                                                                                               
+  [49] " $ ACTCM25                         : int  15 22 NA 23 15 22 NA NA 18 24 ..."                                                                                                 
+  [50] " $ ACTCM75                         : int  19 28 NA 29 19 30 NA NA 23 30 ..."                                                                                                 
+  [51] " $ ACTEN25                         : int  14 22 NA 22 14 22 NA NA 18 24 ..."                                                                                                 
+  [52] " $ ACTEN75                         : int  19 29 NA 30 20 32 NA NA 23 32 ..."                                                                                                 
+  [53] " $ ACTMT25                         : int  15 20 NA 22 15 21 NA NA 17 23 ..."                                                                                                 
+  [54] " $ ACTMT75                         : int  18 26 NA 28 18 28 NA NA 23 28 ..."                                                                                                 
+  [55] " $ ACTWR25                         : int  NA NA NA NA NA 6 NA NA NA 6 ..."                                                                                                   
+  [56] " $ ACTWR75                         : int  NA NA NA NA NA 8 NA NA NA 8 ..."                                                                                                   
+  [57] " $ ACTCMMID                        : int  17 25 NA 26 17 26 NA NA 21 27 ..."                                                                                                 
+  [58] " $ ACTENMID                        : int  17 26 NA 26 17 27 NA NA 21 28 ..."                                                                                                 
+  [59] " $ ACTMTMID                        : int  17 23 NA 25 17 25 NA NA 20 26 ..."                                                                                                 
+  [60] " $ ACTWRMID                        : int  NA NA NA NA NA 7 NA NA NA 7 ..."                                                                                                   
+  [61] " $ SAT_AVG                         : int  823 1146 NA 1180 830 1171 NA NA 970 1215 ..."                                                                                      
+  [62] " $ SAT_AVG_ALL
+   [292] " $ UGDS                            : int  4051 11200 322 5525 5354 28692 1779 2999 4322 19761 ..."      
+   
+   [378] " $ COSTT4_A                        : int  18888 19990 12300 20306 17400 26717 12103 NA 16556 23788 ..."                                                                      
+ [379] " $ COSTT4_P                        : int  NA NA NA NA NA NA NA NA NA NA ..."                
+ 
+ [380] " $ TUITIONFEE_IN                   : int  7182 7206 6870 9192 8720 9450 4200 NA 8750 9852 ..."                                                                               
+ [381] " $ TUITIONFEE_OUT                  : int  12774 16398 6870 21506 15656 23950 7500 NA 24950 26364 ..."                                                                        
+ [382] " $ TUITIONFEE_PROG                 : int  NA NA NA NA NA NA NA NA NA NA ..."                                                                                                 
+ [383] " $ TUITFTE                         : int  9063 9033 12057 8322 7813 12198 2371 5094 7625 13186 ..."                                                                          
+ [384] " $ INEXPFTE                        : int  7459 17208 5123 9352 7393 9817 5935 6176 6817 11324 ..."                                                                           
+ [385] " $ AVGFACSAL                       : int  7079 10170 3849 9341 6557 9605 5805 7672 7173 9429 ..."                 
+ 
+ [392] " $ poolyrs                         : int  2 2 4 2 2 2 2 NA 2 2 ..."                   
+ [394] " $ D150_4                          : int  882 1378 3 759 1351 4438 NA NA 536 4165 ..."                                                                                       
+ [395] " $ D150_L4                         : int  NA NA NA NA NA NA 594 NA NA NA ..."                                                                                                
+ [396] " $ D150_4_POOLED                   : int  2015 2863 21 1560 2649 8713 NA NA 1062 8237 ..."                                                                                   
+ [397] " $ D150_L4_POOLED                  : int  NA NA NA NA NA NA 1188 NA NA NA ..."                                                          [428] " $ D200_4                          : int  1088 1512 3 626 1198 3642 NA NA 520 4179 ..."                                                                                      
+ [429] " $ D200_L4                         : int  NA NA NA NA NA NA 594 NA NA NA ..."          
+ 
+  [436] " $ poolyrs200                      : int  2 2 4 2 2 2 2 NA 2 2 ..."                                                                                                          
+ [437] " $ D200_4_POOLED                   : int  2286 3046 21 1279 2336 6930 NA NA 1131 7758 ..."                                                                                   
+ [438] " $ D200_L4_POOLED                  : int  NA NA NA NA NA NA 1034 NA NA NA ..."   
+ 
+ 
+ 
+ 
+ Factors that need to be numerics
+ [368] " $ RPY_3YR_RT                      : Factor w/ 3810 levels \"0\",\"0.094563485036\",..: 673 2474 1808 2650 272 2875 642 2553 1686 3316 ..."       
+[369] " $ COMPL_RPY_3YR_RT                : Factor w/ 1263 levels \"0.115096570753\",..: 1263 1263 1263 1263 1263 1051 311 887 1263 1263 ..."            
+[370] " $ NONCOM_RPY_3YR_RT               : Factor w/ 1646 levels \"0.068831168831\",..: 309 1187 1646 1215 205 1646 431 1646 817 1646 ..."              
+[371] " $ LO_INC_RPY_3YR_RT               : Factor w/ 2778 levels \"0.086956521739\",..: 845 2227 1636 2215 266 2296 402 2163 1418 2551 ..."             
+[372] " $ MD_INC_RPY_3YR_RT               : Factor w/ 2094 levels \"0.192066805846\",..: 139 1187 2094 1452 70 1407 398 1315 902 1737 ..."               
+[373] " $ HI_INC_RPY_3YR_RT               : Factor w/ 833 levels \"0.214876033058\",..: 833 440 833 833 2 615 833 833 357 833 ..."                       
+[374] " $ DEP_RPY_3YR_RT                  : Factor w/ 1666 levels \"0\",\"0.081339712919\",..: 187 1016 1666 1127 69 1264 1666 1666 672 1462 ..."        
+[375] " $ IND_RPY_3YR_RT                  : Factor w/ 1745 levels \"0.095733160061\",..: 1745 1524 1745 1745 226 1451 279 1518 1017 1745 ..."            
+[376] " $ PELL_RPY_3YR_RT                 : Factor w/ 2266 levels \"0\",\"0.090016366612\",..: 574 1737 2266 1758 181 1833 313 1750 1126 2052 ..."       
+[377] " $ NOPELL_RPY_3YR_RT               : Factor w/ 1264 levels \"0.171875\",\"0.213333333333\",..: 1264 694 1264 1264 17 956 1264 1264 542 1264 ..."  
+[378] " $ FEMALE_RPY_3YR_RT               : Factor w/ 2222 levels \"0.095022624434\",..: 463 1481 2222 1511 174 1707 290 1450 1001 2044 ..."             
+[379] " $ MALE_RPY_3YR_RT                 : Factor w/ 1328 levels \"0\",\"0.065954773869\",..: 182 950 1328 1328 56 1072 311 1328 626 1175 ..."          
+[380] " $ FIRSTGEN_RPY_3YR_RT             : Factor w/ 2775 levels \"0\",\"0.085106382979\",..: 473 1997 1404 2128 193 2183 613 2139 1423 2467 ..."       
+[381] " $ NOTFIRSTGEN_RPY_3YR_RT          : Factor w/ 2950 levels \"0.088888888889\",..: 415 1830 1274 1969 184 2236 402 1820 1357 2640 ..."             
+[382] " $ RPY_5YR_RT                      : Factor w/ 3557 levels \"0.090322580645\",..: 682 2355 1035 2398 317 2671 667 2402 1478 3027 ..."             
+[383] " $ COMPL_RPY_5YR_RT                : Factor w/ 1044 levels \"0.181041844577\",..: 1044 1044 1044 1044 286 889 1044 1044 1044 1044 ..."            
+[384] " $ NONCOM_RPY_5YR_RT               : Factor w/ 1581 levels \"0.114919354839\",..: 261 1122 590 1049 196 1581 1581 1581 671 1581 ..."              
+[385] " $ LO_INC_RPY_5YR_RT               : Factor w/ 2586 levels \"0.126016260163\",..: 739 1984 977 1926 317 2126 461 2090 1200 2324 ..."              
+[386] " $ MD_INC_RPY_5YR_RT               : Factor w/ 1948 levels \"0.24200913242\",..: 110 1142 1948 1310 54 1303 331 1063 712 1540 ..."                
+[387] " $ HI_INC_RPY_5YR_RT               : Factor w/ 664 levels \"0\",\"0.344827586207\",..: 664 664 664 428 9 491 142 664 278 664 ..."                 
+[388] " $ DEP_RPY_5YR_RT                  : Factor w/ 1549 levels \"0.113259668508\",..: 187 890 1549 977 78 1130 334 1549 559 1281 ..."                 
+[389] " $ IND_RPY_5YR_RT                  : Factor w/ 1523 levels \"0.16091954023\",..: 1523 1523 1523 1327 244 1281 268 1357 837 1523 ..."              
+[390] " $ PELL_RPY_5YR_RT                 : Factor w/ 2066 levels \"0.105485232068\",..: 539 1554 2066 1588 258 1726 385 1598 1031 1822 ..."             
+[391] " $ NOPELL_RPY_5YR_RT               : Factor w/ 1183 levels \"0.245283018868\",..: 1183 1183 1183 801 25 899 247 1183 429 1183 ..."                
+[392] " $ FEMALE_RPY_5YR_RT               : Factor w/ 2107 levels \"0.161870503597\",..: 441 1446 2107 1437 200 1654 338 1390 820 1868 ..."              
+[393] " $ MALE_RPY_5YR_RT                 : Factor w/ 1236 levels \"0.117370892019\",..: 153 806 1236 890 61 959 204 1236 595 1064 ..."                  
+[394] " $ FIRSTGEN_RPY_5YR_RT             : Factor w/ 2524 levels \"0\",\"0.145238095238\",..: 498 1761 785 1802 225 2053 573 1883 1137 2350 ..."        
+[395] " $ NOTFIRSTGEN_RPY_5YR_RT          : Factor w/ 2762 levels \"0.141414141414\",..: 466 1762 830 1857 251 2054 372 1749 1121 2322 ..."              
+[396] " $ RPY_7YR_RT                      : Factor w/ 3425 levels \"0.184782608696\",..: 817 2110 1758 2170 432 2313 535 2379 1449 2940 ..."             
+[397] " $ COMPL_RPY_7YR_RT                : Factor w/ 879 levels \"0.297872340426\",..: 879 879 879 769 472 879 879 710 697 879 ..."                     
+[398] " $ NONCOM_RPY_7YR_RT               : Factor w/ 1531 levels \"0.160220994475\",..: 350 997 1531 1030 235 1067 1531 1531 588 1531 ..."              
+[399] " $ LO_INC_RPY_7YR_RT               : Factor w/ 2508 levels \"0.254325259516\",..: 861 1701 1403 1718 470 1807 358 2009 1180 2190 ..."             
+[400] " $ MD_INC_RPY_7YR_RT               : Factor w/ 1855 levels \"0.386138613861\",..: 155 1043 1855 1137 51 1087 338 1855 671 1465 ..."               
+[401] " $ HI_INC_RPY_7YR_RT               : Factor w/ 596 levels \"0.444444444444\",..: 40 394 596 375 12 411 596 596 238 596 ..."                       
+[402] " $ DEP_RPY_7YR_RT                  : Factor w/ 1450 levels \"0.32\",\"0.325\",..: 218 779 1450 887 96 918 196 1450 452 1211 ..."                  
+[403] " $ IND_RPY_7YR_RT                  : Factor w/ 1544 levels \"0.203947368421\",..: 599 1252 1544 1214 399 1202 323 1360 952 1544 ..."              
+[404] " $ PELL_RPY_7YR_RT                 : Factor w/ 2056 levels \"0.235732009926\",..: 701 1397 2056 1450 366 1549 277 1609 956 1838 ..."              
+[405] " $ NOPELL_RPY_7YR_RT               : Factor w/ 1074 levels \"0\",\"0.294117647059\",..: 103 694 1074 741 47 757 314 1074 497 1074 ..."            
+[406] " $ FEMALE_RPY_7YR_RT               : Factor w/ 2059 levels \"0.236897274633\",..: 599 1281 2059 1312 339 1439 250 1445 890 1850 ..."              
+[407] " $ MALE_RPY_7YR_RT                 : Factor w/ 1421 levels \"0.20202020202\",..: 236 856 806 937 84 956 299 1421 564 1193 ..."                    
+[408] " $ FIRSTGEN_RPY_7YR_RT             : Factor w/ 2431 levels \"0.164705882353\",..: 713 1680 1446 1749 326 1872 499 1866 1085 2073 ..."             
+[409] " $ NOTFIRSTGEN_RPY_7YR_RT          : Factor w/ 2586 levels \"0.222222222222\",..: 515 1529 1329 1538 311 1680 565 1651 1151 2269 ..."             
+[410] " $ INC_PCT_LO                      : Factor w/ 3377 levels \"0.089534884\",..: 3377 3377 3377 1028 2074 365 2201 1314 3377 292 ..."               
+[411] " $ DEP_STAT_PCT_IND                : Factor w/ 4595 levels \"0\",\"0.003546099\",..: 489 1173 4535 1498 606 632 1807 3837 1157 322 ..."           
+[412] " $ DEP_INC_PCT_LO                  : Factor w/ 3375 levels \"0.07875895\",\"0.087748344\",..: 2645 1151 2493 1118 2723 420 2509 1122 1808 354 ..."
+[413] " $ IND_INC_PCT_LO                  : Factor w/ 3310 levels \"0.309050773\",..: 3265 704 1534 788 3296 443 2463 346 1610 2125 ..."                 
+[414] " $ PAR_ED_PCT_1STGEN               : Factor w/ 4253 levels \"0\",\"0.058823529\",..: 1214 850 3283 792 1105 417 3399 2256 1390 192 ..."           
+[415] " $ INC_PCT_M1                      : Factor w/ 2720 levels \"0\",\"0.020849421\",..: 2720 2720 2720 997 1789 1033 1629 2532 2720 646 ..."         
+[416] " $ INC_PCT_M2                      : Factor w/ 2480 levels \"0\",\"0.010080645\",..: 2480 2480 2480 1404 465 1524 630 1283 2480 1496 ..."         
+[417] " $ INC_PCT_H1                      : Factor w/ 2040 levels \"0\",\"0.002791878\",..: 2040 2040 2040 1275 398 1471 252 752 2040 1586 ..."          
+[418] " $ INC_PCT_H2                      : Factor w/ 1985 levels \"0\",\"0.001833293\",..: 1985 1985 1985 1222 393 1782 127 546 1985 1840 ..."          
+[419] " $ DEP_INC_PCT_M1                  : Factor w/ 2639 levels \"0\",\"0.065666041\",..: 2639 1239 2639 437 2639 298 1877 1487 1214 176 ..."          
+[420] " $ DEP_INC_PCT_M2                  : Factor w/ 2107 levels \"0\",\"0.028011205\",..: 2107 1094 2107 973 2107 787 2107 1607 581 2107 ..."          
+[421] " $ DEP_INC_PCT_H1                  : Factor w/ 1118 levels \"0\",\"0.003837544\",..: 1118 644 1118 818 1118 697 1118 689 1118 1118 ..."           
+[422] " $ DEP_INC_PCT_H2                  : Factor w/ 1287 levels \"0\",\"0.002878916\",..: 98 716 1287 805 109 1194 1287 527 1287 1287 ..."             
+[423] " $ IND_INC_PCT_M1                  : Factor w/ 2631 levels \"0\",\"0.022088353\",..: 2631 1865 2631 1328 2631 1882 873 2513 1602 652 ..."         
+[424] " $ IND_INC_PCT_M2                  : Factor w/ 1959 levels \"0\",\"0.011294118\",..: 1959 1309 1959 1542 1959 1667 1959 1576 503 1959 ..."        
+[425] " $ IND_INC_PCT_H1                  : Factor w/ 868 levels \"0\",\"0.003197522\",..: 868 624 868 515 868 661 868 600 868 868 ..."                  
+[426] " $ IND_INC_PCT_H2                  : Factor w/ 815 levels \"0\",\"0.000723967\",..: 1 482 815 577 1 628 815 422 815 815 ..."                      
+[427] " $ PAR_ED_PCT_MS                   : Factor w/ 3739 levels \"0\",\"0.002218935\",..: 355 954 2242 968 597 278 2905 2450 1183 48 ..."              
+[428] " $ PAR_ED_PCT_HS                   : Factor w/ 4208 levels \"0\",\"0.057142857\",..: 1468 861 3526 786 1261 442 3331 2189 1498 226 ..."           
+[429] " $ PAR_ED_PCT_PS                   : Factor w/ 4267 levels \"0.030588235\",..: 3038 3402 969 3460 3147 3837 853 1996 2862 4063 ..."               
+[430] " $ APPL_SCH_PCT_GE2                : Factor w/ 4581 levels \"0\",\"0.010727969\",..: 4259 3034 3853 3182 3923 3075 2076 3478 3523 2437 ..."       
+[431] " $ APPL_SCH_PCT_GE3                : Factor w/ 4286 levels \"0\",\"0.007662835\",..: 3940 2713 3191 2578 3723 3135 2239 1775 3122 2685 ..."       
+[432] " $ APPL_SCH_PCT_GE4                : Factor w/ 3938 levels \"0\",\"0.002754399\",..: 3557 2351 2664 2153 3387 2847 1994 978 2686 2462 ..."        
+[433] " $ APPL_SCH_PCT_GE5                : Factor w/ 3592 levels \"0\",\"0.002916211\",..: 3198 1952 2169 1690 3053 2528 1704 670 2348 2143 ..."        
+[434] " $ DEP_INC_AVG                     : Factor w/ 4996 levels \"100091.1758\",..: 1537 3640 1762 3843 1487 4926 1421 3402 2821 4941 ..."             
+[435] " $ IND_INC_AVG  
+
+[506] " $ DEBT_MDN                        : Factor w/ 2172 levels \"1000\",\"10000\",..: 813 546 62 568 515 682 1719 353 81 720 ..."                     
+[507] " $ GRAD_DEBT_MDN                   : Factor w/ 2235 levels \"10000\",\"10002.5\",..: 1504 1045 1349 1177 1503 1121 2235 784 956 986 ..."          
+[508] " $ WDRAW_DEBT_MDN                  : Factor w/ 1788 levels \"10000\",\"10025\",..: 355 205 1734 69 266 126 1472 1787 1571 126 ..."                
+[509] " $ LO_INC_DEBT_MDN                 : Factor w/ 2034 levels \"10000\",\"10012\",..: 726 600 1981 642 470 766 1689 306 37 717 ..."                  
+[510] " $ MD_INC_DEBT_MDN                 : Factor w/ 1714 levels \"10000\",\"10005\",..: 921 502 1714 591 552 640 1251 398 149 669 ..."                 
+[511] " $ HI_INC_DEBT_MDN                 : Factor w/ 998 levels \"10000\",\"10050\",..: 616 200 998 200 175 305 740 153 12 359 ..."                     
+[512] " $ DEP_DEBT_MDN                    : Factor w/ 1397 levels \"10000\",\"10050\",..: 490 312 1397 293 294 433 915 50 1358 453 ..."                  
+[513] " $ IND_DEBT_MDN                    : Factor w/ 1905 levels \"10000\",\"10001\",..: 935 630 236 800 626 694 38 537 252 756 ..."                    
+[514] " $ PELL_DEBT_MDN                   : Factor w/ 1923 levels \"10000\",\"10030\",..: 806 709 47 709 547 796 1615 422 81 862 ..."                    
+[515] " $ NOPELL_DEBT_MDN                 : Factor w/ 1109 levels \"10000\",\"10008\",..: 296 144 1109 144 1078 251 732 144 1078 296 ..."                
+[516] " $ FEMALE_DEBT_MDN                 : Factor w/ 1819 levels \"10000\",\"10013.5\",..: 849 503 1780 553 546 619 1530 288 70 677 ..."                
+[517] " $ MALE_DEBT_MDN                   : Factor w/ 1363 levels \"10000\",\"10002\",..: 455 286 1363 343 240 443 934 256 1361 458 ..."                 
+[518] " $ FIRSTGEN_DEBT_MDN               : Factor w/ 2184 levels \"1000\",\"10000\",..: 717 510 155 583 467 761 1821 393 136 761 ..."                   
+[519] " $ NOTFIRSTGEN_DEBT_MDN            : Factor w/ 2002 levels \"10000\",\"10000.5\",..: 848 513 242 556 437 656 1260 335 26 691 ..."                 
+[520] " $ DEBT_N                          : Factor w/ 2360 levels \"10\",\"100\",\"1000\",..: 964 1853 1606 1025 1478 2278 550 726 999 1804 ..."         
+[521] " $ GRAD_DEBT_N                     : Factor w/ 1544 levels \"0\",\"10\",\"100\",..: 1385 632 683 131 1493 1008 342 1499 1277 831 ..."             
+[522] " $ WDRAW_DEBT_N                    : Factor w/ 1851 levels \"0\",\"10\",\"100\",..: 419 987 1239 316 967 1223 389 34 497 582 ..."                 
+[523] " $ LO_INC_DEBT_N                   : Factor w/ 1716 levels \"0\",\"10\",\"100\",..: 335 749 945 98 791 777 93 1703 241 273 ..."                   
+[524] " $ MD_INC_DEBT_N                   : Factor w/ 1320 levels \"0\",\"10\",\"100\",..: 1064 382 76 1173 8 562 720 1086 1131 260 ..."                 
+[525] " $ HI_INC_DEBT_N                   : Factor w/ 1103 levels \"0\",\"10\",\"100\",..: 483 122 1103 930 475 616 56 490 735 474 ..."                  
+[526] " $ DEP_DEBT_N                      : Factor w/ 1709 levels \"0\",\"10\",\"100\",..: 526 941 1709 358 852 1490 1402 1004 374 1178 ..."             
+[527] " $ IND_DEBT_N                      : Factor w/ 1591 levels \"0\",\"10\",\"100\",..: 954 539 1023 1582 1378 316 1517 307 1513 1220 ..."            
+[528] " $ PELL_DEBT_N                     : Factor w/ 1979 levels \"0\",\"10\",\"100\",..: 639 1129 1239 438 1134 1391 280 248 478 859 ..."              
+[529] " $ NOPELL_DEBT_N                   : Factor w/ 1266 levels \"0\",\"10\",\"100\",..: 637 427 1266 1210 736 788 356 975 1129 613 ..."               
+[530] " $ FEMALE_DEBT_N                   : Factor w/ 1916 levels \"0\",\"10\",\"100\",..: 226 1118 899 263 722 1365 67 242 420 854 ..."                 
+[531] " $ MALE_DEBT_N                     : Factor w/ 1519 levels \"0\",\"10\",\"100\",..: 79 474 1519 139 331 880 1048 1166 1421 684 ..."               
+[532] " $ FIRSTGEN_DEBT_N                 : Factor w/ 1521 levels \"0\",\"10\",\"100\",..: 1385 478 523 1355 238 630 1348 1438 1476 116 ..."             
+[533] " $ NOTFIRSTGEN_DEBT_N              : Factor w/ 1715 levels \"0\",\"10\",\"100\",..: 200 877 400 362 523 1336 1164 1637 236 1051 ..."              
+[534] " $ GRAD_DEBT_MDN10YR               : Factor w/ 2235 levels \"100.101633825\",..: 1648 1189 1492 1320 1647 1264 2235 927 1099 1129 ..."            
+[535] " $ CUML_DEBT_N                     : Factor w/ 2360 levels \"10\",\"100\",\"1000\",..: 964 1853 1606 1025 1478 2278 550 726 999 1804 ..."         
+[536] " $ CUML_DEBT_P90                   : Factor w/ 2290 levels \"1000\",\"10000\",..: 2123 1879 1879 1911 2062 1617 1044 1515 1593 1668 ..."          
+[537] " $ CUML_DEBT_P75                   : Factor w/ 2130 levels \"1000\",\"10000\",..: 1707 1390 1130 1461 1604 1350 520 1156 1018 1350 ..."           
+[538] " $ CUML_DEBT_P25                   : Factor w/ 1681 levels \"1000\",\"10000\",..: 1651 1443 807 1358 1635 1481 577 1263 955 1547 ..."             
+[539] " $ CUML_DEBT_P10                   : Factor w/ 1314 levels \"1000\",\"10000\",..: 1133 1021 657 897 1133 1222 358 790 509 1222 ..."               
+[540] " $ INC_N                           : Factor w/ 1755 levels \"10\",\"100\",\"1001\",..: 1755 1755 1755 512 975 1635 281 383 1755 1097 ..."         
+[541] " $ DEP_INC_N                       : Factor w/ 2004 levels \"0\",\"10\",\"100\",..: 654 1022 1131 171 952 1709 1824 1261 382 1158 ..."            
+[542] " $ IND_INC_N                       : Factor w/ 1730 levels \"0\",\"10\",\"100\",..: 874 264 1033 1472 1295 236 1368 140 1400 1016 ..."            
+[543] " $ DEP_STAT_N                      : Factor w/ 1755 levels \"10\",\"100\",\"1001\",..: 1755 1755 1755 512 975 1635 281 383 1755 1097 ..."         
+[544] " $ PAR_ED_N                        : Factor w/ 2379 levels \"0\",\"10\",\"100\",..: 748 1500 1164 550 1154 2151 193 388 666 1415 ..."             
+[545] " $ APPL_SCH_N                      : Factor w/ 2555 levels \"10\",\"100\",\"1001\",..: 946 1693 1541 707 1377 2374 398 537 842 1558 ..."    
+
+[711] " $ DEBT_MDN_SUPP                   : Factor w/ 2172 levels \"10000\",\"10001\",..: 812 547 63 569 517 681 1715 354 82 719 ..."                    
+[712] " $ GRAD_DEBT_MDN_SUPP              : Factor w/ 2159 levels \"10000\",\"10002.5\",..: 1468 1015 2159 1147 1467 1091 2159 756 926 956 ..."          
+[713] " $ GRAD_DEBT_MDN10YR_SUPP          : Factor w/ 2159 levels \"100.101633825\",..: 1606 1153 2159 1284 1605 1228 2159 893 1063 1093 ..."            
+[714] " $ RPY_3YR_RT_SUPP                 : Factor w/ 3901 levels \"0.050505050505\",..: 682 2483 1814 2660 283 2885 652 2562 1692 3342 ..."             
+[715] " $ LO_INC_RPY_3YR_RT_SUPP          : Factor w/ 3435 levels \"0.043010752688\",..: 959 2466 1804 2452 337 2549 489 2388 1564 2895 ..."             
+[716] " $ MD_INC_RPY_3YR_RT_SUPP          : Factor w/ 2910 levels \"0.141176470588\",..: 229 1618 1275 1980 123 1919 600 1802 1242 2345 ..."             
+[717] " $ HI_INC_RPY_3YR_RT_SUPP          : Factor w/ 2182 levels \"0.183673469388\",..: 37 971 2182 1155 10 1419 651 1460 779 1794 ..."                 
+[718] " $ COMPL_RPY_3YR_RT_SUPP           : Factor w/ 3180 levels \"0.032258064516\",..: 672 1946 1681 2271 412 2353 571 1813 1569 2497 ..."             
+[719] " $ NONCOM_RPY_3YR_RT_SUPP          : Factor w/ 3279 levels \"0.043956043956\",..: 656 2017 1692 2062 461 2169 841 2075 1428 3073 ..."             
+[720] " $ DEP_RPY_3YR_RT_SUPP             : Factor w/ 3186 levels \"0.045454545455\",..: 407 1813 3186 1994 166 2234 669 2549 1268 2602 ..."             
+[721] " $ IND_RPY_3YR_RT_SUPP             : Factor w/ 3270 levels \"0.03125\",\"0.044444444444\",..: 853 2379 1852 2489 386 2224 464 2364 1489 2904 ..." 
+[722] " $ PELL_RPY_3YR_RT_SUPP            : Factor w/ 3598 levels \"0.042553191489\",..: 872 2498 1766 2530 339 2658 516 2519 1594 3049 ..."             
+[723] " $ NOPELL_RPY_3YR_RT_SUPP          : Factor w/ 2890 levels \"0.147058823529\",..: 117 1370 1243 1764 54 1967 859 1551 1072 2450 ..."              
+[724] " $ FEMALE_RPY_3YR_RT_SUPP          : Factor w/ 3599 levels \"0.060240963855\",..: 761 2260 1381 2308 329 2598 512 2212 1530 3138 ..."             
+[725] " $ MALE_RPY_3YR_RT_SUPP            : Factor w/ 2932 levels \"0.043795620438\",..: 477 1849 1557 2061 206 2143 685 2121 1238 2444 ..."             
+[726] " $ FIRSTGEN_RPY_3YR_RT_SUPP        : Factor w/ 3172 levels \"0.056338028169\",..: 496 2065 1439 2214 214 2271 639 2225 1459 2599 ..."             
+[727] " $ NOTFIRSTGEN_RPY_3YR_RT_SUPP     : Factor w/ 3276 levels \"0.021276595745\",..: 446 1900 1315 2047 210 2333 434 1889 1403 2790 ..."             
+[728] " $ C150_L4_POOLED_SUPP             : Factor w/ 3813 levels \"0\",\"0.01920432692307\",..: NA NA NA NA NA NA 157 NA NA NA ..."                     
+[729] " $ C150_4_POOLED_SUPP              : Factor w/ 2365 levels \"0.02243539325842\",..: 482 1363 2365 1232 334 1930 NA NA 403 1975 ..."               
+[730] " $ C200_L4_POOLED_SUPP             : Factor w/ 3593 levels \"0.02779166666666\",..: NA NA NA NA NA NA 613 NA NA NA ..."        
