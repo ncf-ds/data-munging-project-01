@@ -1,0 +1,152 @@
+---
+title: "Data Munging"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+setwd("~/Desktop/CollegeScorecard_Raw_Data")
+
+data1996 <- read.csv((file.path="MERGED1996_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data1997 <- read.csv((file.path="MERGED1997_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data1998 <- read.csv((file.path="MERGED1998_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data1999 <- read.csv((file.path="MERGED1999_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2000 <- read.csv((file.path="MERGED2000_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2001 <- read.csv((file.path="MERGED2001_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2002 <- read.csv((file.path="MERGED2002_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2003 <- read.csv((file.path="MERGED2003_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2004 <- read.csv((file.path="MERGED2004_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2005 <- read.csv((file.path="MERGED2005_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2006 <- read.csv((file.path="MERGED2006_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2007 <- read.csv((file.path="MERGED2007_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2008 <- read.csv((file.path="MERGED2008_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2009 <- read.csv((file.path="MERGED2009_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2010 <- read.csv((file.path="MERGED2010_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2011 <- read.csv((file.path="MERGED2011_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2012 <- read.csv((file.path="MERGED2012_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data2013 <- read.csv((file.path="MERGED2013_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
+data.frame <- list(data1996,data1997,data1998,data1999,data2000,data2001,data2002,data2003,data2004,data2005,data2006,data2007,data2008,data2009,data2010,data2011,data2012,data2013)
+```
+
+UNITID and OPEID is unique across years.
+```{r}
+data1996[1:5,1:5]
+data2001[1:5,1:5]
+data2010[1:5,1:5]
+data2013[1:5,1:5]
+
+```
+
+Summing of na's
+```{r}
+sum(is.na(data1996[,100]))
+
+cal_na_vals <- function(col) {
+  na_vec <- is.na(col)
+  num_NA <- sum(na_vec)
+  return(num_NA)
+}
+
+NAs_by_cols <- apply(data1996, 2, cal_na_vals)
+NAs_by_cols[1:10]
+str(data1996)
+NAs_by_cols <- apply(data2013, 2, cal_na_vals)
+str(NAs_by_cols)
+str(data2013)
+
+hist(NAs_by_cols)
+par(mfrow=c(4,4))
+totalNAs=list()
+
+for (i in 1:length(data.frame)) {
+  NAs_by_cols <- apply(data.frame[[i]], 2, cal_na_vals)
+  hist(NAs_by_cols)
+  totalNAs <- append(totalNAs,NAs_by_cols)
+}
+totalNAs
+
+totalNAs[10000]
+```
+
+
+```{r}
+n_years = 18
+total_NA_df = data.frame()
+n_cols = 1729
+for (i in 1:n_years){
+  year_NAs = totalNAs[(1+(i-1)*n_cols):(i*n_cols)]
+  total_NA_df = rbind(total_NA_df, year_NAs)
+}
+
+summ=0
+for (i in 1:length(totalNAs)){
+  summ = summ +sum(totalNAs[[i]])
+}
+
+```
+The histograms indicate that the proportion of missing data for each column decreases overtime. From this we interpret that these new columns were added over time. Then these columns were retroactively added to previous years datasets to keep the number of columns consistent.
+
+
+```{r}
+allrows <- (nrow(data1996)+nrow(data1997)+nrow(data1998)+nrow(data1999)+nrow(data2000)+nrow(data2001)+nrow(data2002)+nrow(data2003)+nrow(data2004)+nrow(data2005)+nrow(data2006)+nrow(data2007)+nrow(data2008)+nrow(data2009)+nrow(data2010)+nrow(data2011)+nrow(data2012)+nrow(data2013))
+AllNAcols=list()
+for (i in 1:length(total_NA_df)){
+  if (sum(total_NA_df[[i]])==(allrows))
+    AllNAcols  <- append(AllNAcols, as.character(names(total_NA_df[i])))
+}
+AllNAcols
+```
+The only variable that has an NA value for every row of every year is "locale2".
+
+
+```{r}
+FullNAs=c()
+temp
+for (i in 1:length(data.frame)){
+    num_rows <- nrow(data.frame[[i]])
+    for (j in 1:length(NAs_by_cols)){
+      if ((NAs_by_cols[j]) / (num_rows) == 1)
+        temp <- c(i,j)
+        FullNAs <- append(FullNAs, temp)
+  }
+}
+FullNAs
+```
+The histograms indicate that the proportion of missing data for each column decreases overtime. From this we interpret that these new columns were added over time. Then these columns were retroactively added to previous years datasets to keep the number of columns consistent.
+
+Do this for the dataset
+```{r}
+```
+
+na.prop <- apply(data.frame, 2, function(x) sum(is.na(x)/length(x)) )
+Counting number of columns in a specific class
+
+
+```{r}
+# of columns of type numeric
+Nnum=c()
+fnum=c()
+is.numeric(data1996[1:length(data1996)])
+for (i in (1:length(data2013))) {
+  Nnum <- c(Nnum, is.numeric(data2013[,i]))
+  fnum <- c(fnum, is.factor(data2013[,i]))
+  Inum <- c(Inum, is.integer(data2013[,i]))
+  Lnum <- c(Lnum, is.logical(data2013[,i]))
+}
+sumNnum <- sum(Nnum)
+cat("The number of columns of type numeric is",sumNnum)
+
+sumfnum <- sum(fnum)
+cat("The number of columns of type factor is",sumfnum)
+
+sumInum <- sum(Inum)
+cat("The number of columns of type integer is",sumInum)
+
+sumLnum <- sum(Lnum)
+cat("The number of columns of type logical is",sumfnum)
+
+
+```
