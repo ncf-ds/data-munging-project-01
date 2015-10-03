@@ -26,50 +26,6 @@ not.na.columns <- !is.na(college.df)
 sum(na.columns)/sum(not.na.columns)
 ```
 
-Roughly 75%. 
-
-Which column has the most NAs, and how many are there?
-
-```{r}
-col.na.ratios <- colSums(na.columns)/colSums(not.na.columns)
-col.max.na <- c(max(col.na.ratios), nrow(college.df), which.max(col.na.ratios))
-names(col.max.na) <- c("number of NAs", "number of rows", "column name")
-
-col.na <- data.frame(na.count = colSums(na.columns),
-                     row.count = nrow(college.df))
-col.na$na.ratio <- with(col.na,na.count/(row.count - na.count))
-col.na$na.fraction <- with(col.na,na.count/row.count)
-col.na$priv.count <- colSums(ifelse(!is.na(college.df) & college.df == "PrivacySuppressed",1,0))
-
-col.na.most <- col.na[order(col.na$na.ratio,decreasing=TRUE),]
-col.na.least <- col.na[order(col.na$na.ratio,decreasing=FALSE),]
-col.priv.most <- col.na[order(col.na$priv.count,decreasing=FALSE),]
-head(col.na.most)
-head(col.na.least)
-head(col.priv.most)
-```
-
-```{r, echo=FALSE}
-hist(col.na$na.fraction)
-```
-
-So the NAs compose .05% of the rows in this column. Not terrible.
-
-Which has the fewest NAs?
-
-```{r}
-col.min.na <- c(min(col.na.ratios), nrow(college.df), which.min(col.na.ratios))
-names(col.min.na) <- c("number of NAs", "number of rows", "column name")
-
-col.min.na
-```
-
-There are columns with no NAs at all. How many?
-
-```{r}
-length(college.df[,col.na.ratios == 0])
-```
-
 
 #### PrivacySuppressed
 
@@ -84,22 +40,57 @@ priv.supp.count <- sum(priv.supp.bool, na.rm = TRUE)
 not.priv.supp.count <- sum(not.priv.supp.bool, na.rm = TRUE)
 ```
 
-Note that this just counts the columns that do not contain NA. 
-
-Here is the ratio of columns containing "privacy suppressed" to those without:
+Here is the ratio of "privacy suppressed" elements to non-"privacy suppressed" elements. NAs are not included in either category.
 
 ```{r}
 priv.supp.count/not.priv.supp.count
 ```
 
-About 50%. Which column has the most "privacy suppressed" entries?
+
+#### Column-wise analysis:
+
+This includes NA counts and ratios, and "PrivacySuppressed" counts.
 
 ```{r}
-col.ps.ratios <- colSums(priv.supp.columns)/colSums(not.priv.supp.columns)
-col.max.ps <- c(max(col.ps.ratios), nrow(college.df), which.max(col.ps.ratios))
-names(col.max.ps) <- c("number of NAs", "number of rows", "column name")
+col.na.ratios <- colSums(na.columns)/colSums(not.na.columns)
+col.max.na <- c(max(col.na.ratios), nrow(college.df), which.max(col.na.ratios))
+names(col.max.na) <- c("number of NAs", "number of rows", "column name")
 
-col.max.ps
+col.na <- data.frame(na.count = colSums(na.columns),
+                     row.count = nrow(college.df))
+col.na$na.ratio <- with(col.na,na.count/(row.count - na.count))
+col.na$na.fraction <- with(col.na,na.count/row.count)
+col.na$priv.count <- colSums(priv.supp.bool, na.rm = TRUE)
+col.na$priv.fraction <- with(col.na,priv.count/row.count)
+
+col.na.most <- col.na[order(col.na$na.ratio,decreasing=TRUE),]
+col.na.least <- col.na[order(col.na$na.ratio,decreasing=FALSE),]
+col.priv.most <- col.na[order(col.na$priv.count,decreasing=TRUE),]
+col.priv.least <- col.na[order(col.na$priv.count,decreasing=FALSE),]
+
+head(col.na.most)
+head(col.na.least)
+head(col.priv.most)
+```
+
+Histogram of fractions of NAs:
+```{r, echo=FALSE}
+hist(col.na$na.fraction)
+```
+
+Histogram of fractions of PrivacySuppressed elements:
+```{r, echo=FALSE}
+hist(col.na$priv.fraction)
+```
+
+Ratio of columns with no privacy suppressed rows to those with privacy suppressed rows?
+```{r}
+sum(col.na$priv.count == 0)/sum(col.na$priv.count != 0)
+```
+
+Ratio of columns with no NA rows to those with NA rows?
+```{r}
+sum(col.na$na.count == 0)/sum(col.na$na.count != 0)
 ```
 
 
