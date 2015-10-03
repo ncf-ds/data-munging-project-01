@@ -6,7 +6,7 @@ output: html_document
 ```{r}
 require("doBy")
 source("funcs.R")
-library("tidyr")
+require("tidyr")
 #make a symlink from the data dir in the directory where this file is to the desired data file
 datafile <- "data/merged.csv"
 ```
@@ -73,14 +73,15 @@ length(college.df[,col.na.ratios == 0])
 
 #### PrivacySuppressed
 
-Now let's look at columns containing "PrivacySuppressed". (Note that this just counts from the set of columns that do not contain NA.)
+Now let's look at columns containing "PrivacySuppressed".
 
 ```{r, cache = TRUE}
-priv.supp.columns <- which(college.df == "PrivacySuppressed")
-not.priv.supp.columns <- which(college.df != "PrivacySuppressed")
+# this leaves NA as NA (and not 1 or 0)
+priv.supp.bool <- ifelse(college.df == "PrivacySuppressed", 1, 0)
+not.priv.supp.bool <- ifelse(college.df == "PrivacySuppressed", 0, 1)
 
-priv.supp.count <- length(priv.supp.columns)
-not.priv.supp.count <- length(not.priv.supp.columns)
+priv.supp.count <- sum(priv.supp.bool, na.rm = TRUE)
+not.priv.supp.count <- sum(not.priv.supp.bool, na.rm = TRUE)
 ```
 
 Note that this just counts the columns that do not contain NA. 
