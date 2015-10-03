@@ -35,7 +35,22 @@ col.na.ratios <- colSums(na.columns)/colSums(not.na.columns)
 col.max.na <- c(max(col.na.ratios), nrow(college.df), which.max(col.na.ratios))
 names(col.max.na) <- c("number of NAs", "number of rows", "column name")
 
-col.max.na
+col.na <- data.frame(na.count = colSums(na.columns),
+                     row.count = nrow(college.df))
+col.na$na.ratio <- with(col.na,na.count/(row.count - na.count))
+col.na$na.fraction <- with(col.na,na.count/row.count)
+col.na$priv.count <- colSums(ifelse(!is.na(college.df) & college.df == "PrivacySuppressed",1,0))
+
+col.na.most <- col.na[order(col.na$na.ratio,decreasing=TRUE),]
+col.na.least <- col.na[order(col.na$na.ratio,decreasing=FALSE),]
+col.priv.most <- col.na[order(col.na$priv.count,decreasing=FALSE),]
+head(col.na.most)
+head(col.na.least)
+head(col.priv.most)
+```
+
+```{r, echo=FALSE}
+hist(col.na$na.fraction)
 ```
 
 So the NAs compose .05% of the rows in this column. Not terrible.
@@ -100,6 +115,10 @@ head(
 ```
 
 ```{r}
-names(college.df) <- rename_by_yaml(college.df,"data/data_dictionary.yaml")
-kvs <- gather(college.df)
+c2 <- college.df
+names(c2) <- rename_by_yaml(c2,"data/data_dictionary.yaml")
+
+#c2 <- c2[,! grepl("school",names(c2)) & !grepl("location",names(c2))]
+#kvs <- gather(c2,key=k,value=v,-X,-YEAR,-X.UNITID,-ope8_id,-ope6_id)
+#kvs <- separate(kvs,k,into=c("p1","p2","p3"),sep=".",extra="merge")
 ```
