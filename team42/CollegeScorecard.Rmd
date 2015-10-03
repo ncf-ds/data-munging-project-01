@@ -13,34 +13,81 @@ datafile <- "data/merged.csv"
 
 
 ```{r, cache=TRUE}
-college.df <- read.csv(datafile, header = TRUE, na.strings = c("NULL", "PrivacySuppressed"))
+college.df <- read.csv(datafile, header = TRUE, na.strings = c("NULL"))
 ```
 
-What is the ratio of NAs to non-NAs overall? (Note that NA includes both "Null" and "PrivacySuppressed".)
-```{r}
-sum(is.na(college.df))/sum(!is.na(college.df))
+#### NA
+
+What is the ratio of NAs to non-NAs overall? (Note that NA includes only "Null" - not "PrivacySuppressed".)
+```{r, cache=TRUE}
+na.columns <- is.na(college.df)
+not.na.columns <- !is.na(college.df)
+
+sum(na.columns)/sum(not.na.columns)
 ```
 
-Yes, that's greater than 1 - there are more NAs than non NAs in this dataset. Which column has the most NAs, and how many are there?
+Roughly 75%. 
+
+Which column has the most NAs, and how many are there?
 
 ```{r}
-col.na.ratios <- colSums(is.na(college.df))/colSums(!is.na(college.df))
+col.na.ratios <- colSums(na.columns)/colSums(not.na.columns)
 col.max.na <- c(max(col.na.ratios), nrow(college.df), which.max(col.na.ratios))
 names(col.max.na) <- c("number of NAs", "number of rows", "column name")
 
 col.max.na
 ```
 
-And the fewest NAs?
+So the NAs compose .05% of the rows in this column. Not terrible.
+
+Which has the fewest NAs?
 
 ```{r}
-col.na.ratios <- colSums(is.na(college.df))/colSums(!is.na(college.df))
 col.min.na <- c(min(col.na.ratios), nrow(college.df), which.min(col.na.ratios))
 names(col.min.na) <- c("number of NAs", "number of rows", "column name")
 
 col.min.na
 ```
 
+There are columns with no NAs at all. How many?
+
+```{r}
+length(college.df[,col.na.ratios == 0])
+```
+
+
+#### PrivacySuppressed
+
+Now let's look at columns containing "PrivacySuppressed". (Note that this just counts from the set of columns that do not contain NA.)
+
+```{r, cache = TRUE}
+priv.supp.columns <- which(college.df == "PrivacySuppressed")
+not.priv.supp.columns <- which(college.df != "PrivacySuppressed")
+
+priv.supp.count <- length(priv.supp.columns)
+not.priv.supp.count <- length(not.priv.supp.columns)
+```
+
+Note that this just counts the columns that do not contain NA. 
+
+Here is the ratio of columns containing "privacy suppressed" to those without:
+
+```{r}
+priv.supp.count/not.priv.supp.count
+```
+
+About 50%. Which column has the most "privacy suppressed" entries?
+
+```{r}
+col.ps.ratios <- colSums(priv.supp.columns)/colSums(not.priv.supp.columns)
+col.max.ps <- c(max(col.ps.ratios), nrow(college.df), which.max(col.ps.ratios))
+names(col.max.ps) <- c("number of NAs", "number of rows", "column name")
+
+col.max.ps
+```
+
+
+#### Looking forward.... this code is remarkably rough.
 
 ```{r}
 head(
