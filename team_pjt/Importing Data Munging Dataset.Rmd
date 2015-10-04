@@ -24,13 +24,13 @@ data2010 <- read.csv((file.path="MERGED2010_PP.csv"), header=TRUE, na.strings="N
 data2011 <- read.csv((file.path="MERGED2011_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
 data2012 <- read.csv((file.path="MERGED2012_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
 data2013 <- read.csv((file.path="MERGED2013_PP.csv"), header=TRUE, na.strings="NULL", sep=",")
-data.frame <- list(data1996,data1997,data1998,data1999,data2000,data2001,data2002,data2003,data2004,data2005,data2006,data2007,data2008,data2009,data2010,data2011,data2012,data2013)
+data.frame <- list('data1996','data1997','data1998','data1999','data2000','data2001','data2002','data2003','data2004','data2005','data2006','data2007','data2008','data2009','data2010','data2011','data2012','data2013')
 
 years = 1996:2013
 
   allyears <- data.frame()
   for (i in 1:length(data.frame)){
-    allyears <- rbind(allyears, cbind(data.frame[[i]], rep(years[i], nrow(data.frame[[i]]))))
+    allyears <- rbind(allyears, cbind(eval(parse(text = data.frame[[i]])), rep(years[i], nrow(eval(parse(text = data.frame[[i]]))))))
   }
   
   str(allyears)
