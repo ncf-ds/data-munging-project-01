@@ -7,6 +7,7 @@ output: html_document
 require("doBy")
 source("funcs.R")
 require("tidyr")
+require("ggplot2")
 #make a symlink from the data dir in the directory where this file is to the desired data file
 datafile <- "data/merged.csv"
 ```
@@ -114,3 +115,35 @@ names(c2) <- rename_by_yaml(c2,"data/data_dictionary.yaml")
 #kvs <- gather(c2,key=k,value=v,-X,-YEAR,-X.UNITID,-ope8_id,-ope6_id)
 #kvs <- separate(kvs,k,into=c("p1","p2","p3"),sep=".",extra="merge")
 ```
+
+#### Thoughts
+
+What state pays its faculty the most?
+
+```{r}
+col.df <- read.csv(datafile, header = TRUE, na.strings = c("NULL", "PrivacySuppressed"))
+```
+
+
+```{r}
+ggplot(college.df, aes(x = STABBR, y = AVGFACSAL)) + geom_boxplot() + xlab("State") + ylab("Avg monthly salary")
+```
+
+Percentage of full time faculty by state:
+
+```{r}
+ggplot(college.df, aes(x = STABBR, y = PFTFAC)) + geom_boxplot() + xlab("State") + ylab("Percentage full time faculty")
+```
+
+This looks like it should be the overall percentage of students making > 25k after 6,7,8,9 and 10 years, but these numbers look very wrong.
+
+```{r}
+colSums(col.df[,grep("^gt_25k*", colnames(col.df))], na.rm = TRUE)/nrow(col.df)
+```
+
+Should be the number of students that are working and not enrolled in various income brackets. Where are these numbers coming from?
+
+```{r}
+colSums(col.df[,grep("^count_wne_*", colnames(col.df))], na.rm = TRUE)
+```
+
