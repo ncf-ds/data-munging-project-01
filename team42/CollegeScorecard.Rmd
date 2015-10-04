@@ -1,26 +1,48 @@
 ---
-title: "CollegeScorecard"
+title: "CollegeScorecardData"
 output: html_document
 ---
+Authors: Josh, Becky, Erin
+
+
+```{r}
+#JOSH: What do we do with this?
+#c2 <- college.df
+#names(c2) <- rename_by_yaml(c2,"data/data_dictionary.yaml")
+
+#c2 <- c2[,! grepl("school",names(c2)) & !grepl("location",names(c2))]
+#kvs <- gather(c2,key=k,value=v,-X,-YEAR,-X.UNITID,-ope8_id,-ope6_id)
+#kvs <- separate(kvs,k,into=c("p1","p2","p3"),sep=".",extra="merge")
+```
+
 
 ```{r}
 require("doBy")
 source("funcs.R")
 require("tidyr")
 require("ggplot2")
+#install.packages("ggmap")
+#install.packages("maps")
+require("ggmap")
+require("maps")
 #make a symlink from the data dir in the directory where this file is to the desired data file
 datafile <- "data/merged.csv"
 ```
 
+### Read the data
+
+Initially, we read the data and preserve any entries that are "PrivacySuppressed". We will treat these as NAs in our analysis further forward, but we keep them initially to assess the quality of the data.
 
 ```{r, cache=TRUE}
 college.df <- read.csv(datafile, header = TRUE, na.strings = c("NULL"))
 ```
 
-#### NA
+#### Missing data
 
-What is the ratio of NAs to non-NAs overall? (Note that NA includes only "Null" - not "PrivacySuppressed".)
-```{r, cache=TRUE}
+What is the ratio of NAs to non-NAs overall? 
+
+(Note that NA includes only "Null" - not "PrivacySuppressed".)
+```{r}
 na.columns <- is.na(college.df)
 not.na.columns <- !is.na(college.df)
 
@@ -32,7 +54,7 @@ sum(na.columns)/sum(not.na.columns)
 
 Now let's look at columns containing "PrivacySuppressed".
 
-```{r, cache = TRUE}
+```{r}
 # this leaves NA as NA (and not 1 or 0)
 priv.supp.bool <- ifelse(college.df == "PrivacySuppressed", 1, 0)
 not.priv.supp.bool <- ifelse(college.df == "PrivacySuppressed", 0, 1)
@@ -42,16 +64,14 @@ not.priv.supp.count <- sum(not.priv.supp.bool, na.rm = TRUE)
 ```
 
 Here is the ratio of "privacy suppressed" elements to non-"privacy suppressed" elements. NAs are not included in either category.
-
 ```{r}
 priv.supp.count/not.priv.supp.count
 ```
 
 
-#### Column-wise analysis:
+#### Overall column-wise analysis:
 
-This includes NA counts and ratios, and "PrivacySuppressed" counts.
-
+This includes NA counts and ratios, and counts of "PrivacySuppressed".
 ```{r}
 col.na.ratios <- colSums(na.columns)/colSums(not.na.columns)
 col.max.na <- c(max(col.na.ratios), nrow(college.df), which.max(col.na.ratios))
@@ -68,9 +88,20 @@ col.na.most <- col.na[order(col.na$na.ratio,decreasing=TRUE),]
 col.na.least <- col.na[order(col.na$na.ratio,decreasing=FALSE),]
 col.priv.most <- col.na[order(col.na$priv.count,decreasing=TRUE),]
 col.priv.least <- col.na[order(col.na$priv.count,decreasing=FALSE),]
+```
 
+Columns with the most NAs:
+```{r}
 head(col.na.most)
+```
+
+Columns with the least NAs:
+```{r}
 head(col.na.least)
+```
+
+And columns with the most "PrivacySuppressed" elements:
+```{r}
 head(col.priv.most)
 ```
 
@@ -84,66 +115,109 @@ Histogram of fractions of PrivacySuppressed elements:
 hist(col.na$priv.fraction)
 ```
 
-Ratio of columns with no privacy suppressed rows to those with privacy suppressed rows?
+Ratio of columns with no "PrivacySuppressed"s to those with "PrivacySuppressed":
 ```{r}
 sum(col.na$priv.count == 0)/sum(col.na$priv.count != 0)
 ```
 
-Ratio of columns with no NA rows to those with NA rows?
+Ratio of columns with no NAs to those with NAs:
 ```{r}
 sum(col.na$na.count == 0)/sum(col.na$na.count != 0)
 ```
 
+### Analysis
 
-#### Looking forward.... this code is remarkably rough.
-
+We reread the data considering "PrivacySuppressed" as NA:
 ```{r}
-head(
-  summaryBy(
-    FEMALE_COMP_ORIG_YR4_RT + FEMALE_COMP_ORIG_YR3_RT + FEMALE_COMP_ORIG_YR2_RT + FEMALE_COMP_ORIG_YR6_RT + FEMALE_COMP_ORIG_YR8_RT ~ region + PREDDEG, 
-    data=college.df,
-    FUN=function(x) {c(m =mean(x, na.rm = TRUE),s =sd(x, na.rm = TRUE)) }
-    )
-)
-```
-
-```{r}
-c2 <- college.df
-names(c2) <- rename_by_yaml(c2,"data/data_dictionary.yaml")
-
-#c2 <- c2[,! grepl("school",names(c2)) & !grepl("location",names(c2))]
-#kvs <- gather(c2,key=k,value=v,-X,-YEAR,-X.UNITID,-ope8_id,-ope6_id)
-#kvs <- separate(kvs,k,into=c("p1","p2","p3"),sep=".",extra="merge")
-```
-
-#### Thoughts
-
-What state pays its faculty the most?
-
-```{r}
+rm(college.df)
 col.df <- read.csv(datafile, header = TRUE, na.strings = c("NULL", "PrivacySuppressed"))
 ```
 
+#### Exploration
+
+And we begin to explore. What state pays its faculty the most?
 
 ```{r}
-ggplot(college.df, aes(x = STABBR, y = AVGFACSAL)) + geom_boxplot() + xlab("State") + ylab("Avg monthly salary")
+ggplot(col.df, aes(x = STABBR, y = AVGFACSAL)) + geom_boxplot() + xlab("State") + ylab("Avg monthly salary")
 ```
 
-Percentage of full time faculty by state:
+Here is a plot of the percentage of full time faculty by state:
 
 ```{r}
-ggplot(college.df, aes(x = STABBR, y = PFTFAC)) + geom_boxplot() + xlab("State") + ylab("Percentage full time faculty")
+ggplot(col.df, aes(x = STABBR, y = PFTFAC)) + geom_boxplot() + xlab("State") + ylab("Percentage full time faculty")
 ```
 
-This looks like it should be the overall percentage of students making > 25k after 6,7,8,9 and 10 years, but these numbers look very wrong.
-
+Are there any regions in the US where schools tend to have more full time faculty?
 ```{r}
-colSums(col.df[,grep("^gt_25k*", colnames(col.df))], na.rm = TRUE)/nrow(col.df)
+map<-get_map(location='united states', zoom=4, maptype = "terrain", source='google',color='color')
+ggmap(map) + geom_point(
+     aes(x=LONGITUDE, y=LATITUDE, show_guide = TRUE, colour=PFTFAC), 
+     data=col.df, na.rm = T)  + 
+     scale_color_gradient(low="beige", high="blue")
 ```
 
-Should be the number of students that are working and not enrolled in various income brackets. Where are these numbers coming from?
 
+Turning now to the students: what is the percentage of students making > $25000/yr after 6,7,8,9 and 10 years of school?
 ```{r}
-colSums(col.df[,grep("^count_wne_*", colnames(col.df))], na.rm = TRUE)
+colMeans(col.df[,grep("^gt_25k*", colnames(col.df))], na.rm = TRUE)
+```
+
+#### Visualizing
+
+We started by looking at the relationship between the percentage of first-generation students, faculty salaries and percentage of students making > 25k/year:
+```{r}
+qplot(y=gt_25k_p10, x=AVGFACSAL, size = FIRSTGEN_YR4_N/(FIRSTGEN_YR4_N+ NOT1STGEN_YR4_N), data = col.df)
+```
+
+The image suggests there is some correlation. We wanted to see if we could break this up into further components: school tuition, type of school ("traditional" or "non-traditional"), predominant degree awarded and control of the school (public, for-profit and not-for-profit). 
+
+We start by binning the tuition fee into three categories: 
+```{r}
+col.df$TUITFTE.bin <- cut(col.df$TUITFTE, quantile(col.df$TUITFTE, c(0,.25,.75,1), na.rm = TRUE), labels = c("low tuition", "interquartile", "high tuition"))
+```
+
+Then, we find the ratio of first-generation students to non-first-generation students. We combine two columns to do so, and again bin into three categories.
+```{r}
+col.df$FIRSTGEN.ratio <- with(col.df, FIRSTGEN_YR4_N/(FIRSTGEN_YR4_N+ NOT1STGEN_YR4_N))
+col.df$FIRSTGEN.bin <- with(col.df, cut(FIRSTGEN.ratio, quantile(FIRSTGEN.ratio, seq(0,1,.25), na.rm = TRUE), labels = paste0(seq(25, 100, 25), "%ile")))
+```
+
+We bin the predominant degree awarded into two categories: traditional and non-traditional. If the school offers bredominantly bachelor's and grad degrees, we consider it to be a traditional school. Otherwise, we consider it to be non-traditional.
+```{r}
+col.df$PREDDEG.bin <- factor(ifelse(college.df$PREDDEG < 3,"Non-trdl","Trdl"))
+```
+
+And we create a new class combining control of the school (public, not-for-profit, for-profit) with the predominant degree awarded (traditional, non-traditional).
+```{r}
+col.df$PRED.CTRL <- paste(
+                      col.df$PREDDEG.bin, 
+                      factor(
+                          ifelse(
+                            college.df$CONTROL == 1, 
+                            "Public",
+                            ifelse(
+                              college.df$CONTROL == 2, 
+                              "Nonprofit",
+                              # JOSH: check for NAs here
+                              "For profit"
+                            )
+                          )
+                        )
+                    )
+
+#JOSH: check point size
+#JOSH: any chance we can change the FIRSTGEN.bin label?
+```
+
+And lastly, we visualize!
+```{r}
+qplot(
+  y=gt_25k_p10, 
+  x=AVGFACSAL, 
+  data = col.df, 
+  facets = TUITFTE.bin ~ PRED.CTRL,
+  xlab = "Avg Faculty Salary", 
+  ylab = "Students Earning > $25K After 10 Yrs"
+) + geom_point(size=3, aes(colour = FIRSTGEN.bin)) 
 ```
 
