@@ -1,10 +1,13 @@
 ---
 title: "CollegeScorecardData"
-output: html_document
+output: 
+  html_document: 
+    fig_height: 6
+    fig_width: 10
 ---
 Authors: Josh, Becky, Erin
 
-```{r}
+```{r, message=FALSE}
 require("doBy")
 source("funcs.R")
 require("tidyr")
@@ -198,7 +201,7 @@ col.df$PRED.CTRL <- paste(
 ```
 
 And lastly, we visualize!
-```{r}
+```{r, message=FALSE,warning=FALSE}
 qplot(
   y=gt_25k_p10, 
   x=AVGFACSAL, 
