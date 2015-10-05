@@ -184,7 +184,10 @@ col.df$PREDDEG.bin <- factor(ifelse(col.df$PREDDEG < 3,"Non-trdl","Trdl"))
 
 And we create a new class combining control of the school (public, not-for-profit, for-profit) with the predominant degree awarded (traditional, non-traditional).
 ```{r}
-col.df <- col.df[not(is.na(col.df$CONTROL)),]
+#Remove some of the NA's that will clutter up the plot below
+col.df <- col.df[! is.na(col.df$CONTROL) & 
+                 ! is.na(col.df$FIRSTGEN.bin) & 
+                 ! is.na(col.df$TUITFTE.bin),]
 col.df$PRED.CTRL <- paste(
                       col.df$PREDDEG.bin, 
                       factor(
