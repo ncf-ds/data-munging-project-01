@@ -184,6 +184,7 @@ col.df$PREDDEG.bin <- factor(ifelse(col.df$PREDDEG < 3,"Non-trdl","Trdl"))
 
 And we create a new class combining control of the school (public, not-for-profit, for-profit) with the predominant degree awarded (traditional, non-traditional).
 ```{r}
+col.df <- col.df[not(is.na(col.df$CONTROL)),]
 col.df$PRED.CTRL <- paste(
                       col.df$PREDDEG.bin, 
                       factor(
@@ -191,7 +192,6 @@ col.df$PRED.CTRL <- paste(
                             "Public",
                             ifelse( col.df$CONTROL == 2, 
                               "Nonprofit",
-                              # JOSH: check for NAs here
                               "For profit"
                             )
                           )
