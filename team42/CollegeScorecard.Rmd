@@ -4,18 +4,6 @@ output: html_document
 ---
 Authors: Josh, Becky, Erin
 
-
-```{r}
-#JOSH: What do we do with this?
-#c2 <- college.df
-#names(c2) <- rename_by_yaml(c2,"data/data_dictionary.yaml")
-
-#c2 <- c2[,! grepl("school",names(c2)) & !grepl("location",names(c2))]
-#kvs <- gather(c2,key=k,value=v,-X,-YEAR,-X.UNITID,-ope8_id,-ope6_id)
-#kvs <- separate(kvs,k,into=c("p1","p2","p3"),sep=".",extra="merge")
-```
-
-
 ```{r}
 require("doBy")
 source("funcs.R")
@@ -184,7 +172,7 @@ col.df$FIRSTGEN.bin <- with(col.df, cut(FIRSTGEN.ratio, quantile(FIRSTGEN.ratio,
 
 We bin the predominant degree awarded into two categories: traditional and non-traditional. If the school offers bredominantly bachelor's and grad degrees, we consider it to be a traditional school. Otherwise, we consider it to be non-traditional.
 ```{r}
-col.df$PREDDEG.bin <- factor(ifelse(college.df$PREDDEG < 3,"Non-trdl","Trdl"))
+col.df$PREDDEG.bin <- factor(ifelse(col.df$PREDDEG < 3,"Non-trdl","Trdl"))
 ```
 
 And we create a new class combining control of the school (public, not-for-profit, for-profit) with the predominant degree awarded (traditional, non-traditional).
@@ -193,10 +181,10 @@ col.df$PRED.CTRL <- paste(
                       col.df$PREDDEG.bin, 
                       factor(
                           ifelse(
-                            college.df$CONTROL == 1, 
+                            col.df$CONTROL == 1, 
                             "Public",
                             ifelse(
-                              college.df$CONTROL == 2, 
+                              col.df$CONTROL == 2, 
                               "Nonprofit",
                               # JOSH: check for NAs here
                               "For profit"
