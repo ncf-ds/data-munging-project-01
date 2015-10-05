@@ -12,6 +12,7 @@ require("doBy")
 source("funcs.R")
 require("tidyr")
 require("ggplot2")
+theme_set(theme_grey(base_size=9))
 #install.packages("ggmap")
 #install.packages("maps")
 require("ggmap")
@@ -119,7 +120,7 @@ sum(col.na$na.count == 0)/sum(col.na$na.count != 0)
 ### Analysis
 
 We reread the data considering "PrivacySuppressed" as NA:
-```{r}
+```{r, cache=TRUE}
 rm(college.df)
 col.df <- read.csv(datafile, header = TRUE, na.strings = c("NULL", "PrivacySuppressed"))
 ```
@@ -157,7 +158,10 @@ colMeans(col.df[,grep("^gt_25k*", colnames(col.df))], na.rm = TRUE)
 
 We started by looking at the relationship between the percentage of first-generation students, faculty salaries and percentage of students making > 25k/year:
 ```{r}
-qplot(y=gt_25k_p10, x=AVGFACSAL, size = FIRSTGEN_YR4_N/(FIRSTGEN_YR4_N+ NOT1STGEN_YR4_N), data = col.df)
+qplot(y=gt_25k_p10, x=AVGFACSAL, size = FIRSTGEN_YR4_N/(FIRSTGEN_YR4_N+ NOT1STGEN_YR4_N), data = col.df)+guides( size = guide_legend(title="Fraction of first-generation Students",
+                                title.position = "left", title.hjust = 0.5,
+                                title.theme = element_text(size=9, face="italic", 
+                                                           angle = 90)))
 ```
 
 The image suggests there is some correlation. We wanted to see if we could break this up into further components: school tuition, type of school ("traditional" or "non-traditional"), predominant degree awarded and control of the school (public, for-profit and not-for-profit). 
@@ -183,11 +187,9 @@ And we create a new class combining control of the school (public, not-for-profi
 col.df$PRED.CTRL <- paste(
                       col.df$PREDDEG.bin, 
                       factor(
-                          ifelse(
-                            col.df$CONTROL == 1, 
+                          ifelse( col.df$CONTROL == 1, 
                             "Public",
-                            ifelse(
-                              col.df$CONTROL == 2, 
+                            ifelse( col.df$CONTROL == 2, 
                               "Nonprofit",
                               # JOSH: check for NAs here
                               "For profit"
@@ -196,8 +198,6 @@ col.df$PRED.CTRL <- paste(
                         )
                     )
 
-#JOSH: check point size
-#JOSH: any chance we can change the FIRSTGEN.bin label?
 ```
 
 And lastly, we visualize!
@@ -209,6 +209,16 @@ qplot(
   facets = TUITFTE.bin ~ PRED.CTRL,
   xlab = "Avg Faculty Salary", 
   ylab = "Students Earning > $25K After 10 Yrs"
-) + geom_point(size=3, aes(colour = FIRSTGEN.bin)) 
+) + 
+  geom_point(size=3, aes(colour = FIRSTGEN.bin)) + 
+  guides( colour = guide_legend(title="Fraction of first-generation Students",
+                                title.position = "left", title.hjust = 0.5,
+                                title.theme = element_text(size=9, face="italic", 
+                                                           angle = 90)))
 ```
 
+The blue dots and the purple dots tends to fall predominantly in the public schools and the for-profit private school block. That shows that the state schools and the for-profit private schools usually have a higher percentage of first-generation college student. Within the non-traditional for profit schools, a number of schools with high first-generatio students charge medium to high tuition and only about 50%-60% of the students are making over 25K in 10 years. These non-traditional schools are generally trade school supposed to teach students skills to build a career. Unfortunately, the data shows that these schools are not producing value for the students. Perhaps the first-generation student are more prone to fall for their often misleading and aggressive marketing. 
+
+On the other hand, the orange dots are a lot more prevalent in the traditional private non-profit columns. These includes schools like the ivy league and other expensive (above average tuition) private schools. This means that traditional private non-profit schools generally have lower percentages of first-generation students. 
+
+There is some correlation between the salary of professors and the salary of the student. The professor’s salary might indicate how well-funded, well-endowed the school is, and that positively correlates with how well the students do after graduation. But this correlation tapers off  once professor’s salary reaches a certain point.
